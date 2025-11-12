@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:nutri_mate/pages/home_page.dart';
+import 'package:nutri_mate/pages/profile_features.dart';
 
 class VerifyEmailPage extends StatefulWidget {
   const VerifyEmailPage({super.key});
@@ -52,7 +53,6 @@ class _VerifyEmailPageState extends State<VerifyEmailPage> {
   }
 
   // ✅ Check if email is verified
-// ✅ Check if email is verified
   Future checkEmailVerified() async {
     await FirebaseAuth.instance.currentUser!.reload();
     final user = FirebaseAuth.instance.currentUser!;
@@ -65,18 +65,24 @@ class _VerifyEmailPageState extends State<VerifyEmailPage> {
       timer?.cancel();
 
       // 🔥 Update Firestore to reflect verified email
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .update({
+      final userRef = FirebaseFirestore.instance.collection('users').doc(user.uid);
+      await userRef.update({
         'isEmailVerified': true,
         'updatedAt': Timestamp.now(),
       });
 
-      // Redirect to HomePage
+      // 🧠 Check if profileFeatures already exist
+      final userDoc = await userRef.get();
+      final hasProfile =
+          userDoc.exists && userDoc.data()?['profileFeatures'] != null;
+
+      // ✅ Redirect based on profile completion
       if (mounted) {
         Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => const HomePage()),
+          MaterialPageRoute(
+            builder: (context) =>
+            hasProfile ? const HomePage() : const ProfileFeaturesPage(),
+          ),
         );
       }
     }
@@ -102,6 +108,13 @@ class _VerifyEmailPageState extends State<VerifyEmailPage> {
             icon: const Icon(Icons.refresh),
             label: const Text('Resend Email'),
             onPressed: canResendEmail ? sendVerificationEmail : null,
+          ),
+          const SizedBox(height: 20),
+          TextButton(
+            onPressed: () async {
+              await FirebaseAuth.instance.signOut();
+            },
+            child: const Text("Cancel / Back to Login"),
           ),
         ],
       ),

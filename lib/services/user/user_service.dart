@@ -8,25 +8,52 @@ class UserService {
 
   // Create or update user document
   Future<void> createOrUpdateUser(UserModel user) async {
-    // 🔁 Reload user to ensure latest verification status
     final firebaseUser = FirebaseAuth.instance.currentUser;
     await firebaseUser?.reload();
     final refreshedUser = FirebaseAuth.instance.currentUser;
 
     await users.doc(user.uid).set({
       ...user.toMap(),
-      'isEmailVerified': refreshedUser?.emailVerified ?? false, // ✅ always fresh
+      'isEmailVerified': refreshedUser?.emailVerified ?? false,
       'updatedAt': Timestamp.now(),
     }, SetOptions(merge: true));
   }
 
+  // ✅ Update or create user profile features
+  Future<void> updateUserProfileFeatures({
+    required String uid,
+    required int age,
+    required String gender,
+    required int heightCm,
+    required int weightKg,
+    required String activityLevel,
+    required String dietaryPreference,
+    String? goal,
+  }) async {
+    double heightM = heightCm / 100;
+    double bmi = heightM > 0 ? double.parse((weightKg / (heightM * heightM)).toStringAsFixed(1)) : 0;
 
-  // ✅ FIXED: create if not found
+    await users.doc(uid).set({
+      'profileFeatures': {
+        'age': age,
+        'gender': gender,
+        'heightCm': heightCm,
+        'weightKg': weightKg,
+        'bmi': bmi,
+        'activityLevel': activityLevel,
+        'dietaryPreference': dietaryPreference,
+        'goal': goal ?? '',
+        'lastUpdated': Timestamp.now(),
+      },
+      'updatedAt': Timestamp.now(),
+    }, SetOptions(merge: true));
+  }
+
+  // ✅ Cart + Other methods remain unchanged
   Future<void> updateCart(String uid, List<CartItem> cartItems) async {
     final userRef = users.doc(uid);
-
-    // If doc doesn't exist, create it first
     final snapshot = await userRef.get();
+
     if (!snapshot.exists) {
       await userRef.set({
         'uid': uid,
@@ -36,14 +63,12 @@ class UserService {
       });
     }
 
-    // Then safely update
     await userRef.set({
       'cart': cartItems.map((item) => item.toMap()).toList(),
       'updatedAt': Timestamp.now(),
     }, SetOptions(merge: true));
   }
 
-  // Get user
   Future<UserModel?> getUser(String uid) async {
     final doc = await users.doc(uid).get();
     if (doc.exists) {
@@ -52,7 +77,6 @@ class UserService {
     return null;
   }
 
-  // Real-time listener
   Stream<UserModel?> streamUser(String uid) {
     return users.doc(uid).snapshots().map((snapshot) {
       if (snapshot.exists) {
@@ -62,7 +86,6 @@ class UserService {
     });
   }
 
-  // Add new order
   Future<void> addOrder(String uid, OrderModel order) async {
     await users.doc(uid).set({
       'orders': FieldValue.arrayUnion([order.toMap()]),
@@ -70,7 +93,6 @@ class UserService {
     }, SetOptions(merge: true));
   }
 
-  // Add payment record
   Future<void> addPayment(String uid, PaymentModel payment) async {
     await users.doc(uid).set({
       'paymentMethods': FieldValue.arrayUnion([payment.toMap()]),

@@ -225,13 +225,22 @@ class _PaymentPageState extends State<PaymentPage> with SingleTickerProviderStat
       backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
         title: const Text("Checkout"),
-        backgroundColor: Colors.transparent,
+        flexibleSpace: Container(
+          decoration:  BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Theme.of(context).colorScheme.secondaryContainer,Theme.of(context).colorScheme.secondaryContainer],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
+        // backgroundColor: Colors.transparent,
         foregroundColor: Theme.of(context).colorScheme.inversePrimary,
         bottom: TabBar(
           controller: _tabController,
           indicatorColor: Theme.of(context).colorScheme.primary,
-          labelColor: Theme.of(context).colorScheme.primary,
-          unselectedLabelColor: Colors.grey,
+          labelColor: Theme.of(context).colorScheme.secondary,
+          unselectedLabelColor: Theme.of(context).colorScheme.primary,
           tabs: const [
             Tab(text: "Card"),
             Tab(text: "Google Pay"),

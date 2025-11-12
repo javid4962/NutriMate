@@ -1,32 +1,59 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-
-import '../models/restaurant.dart';
+import 'package:intl/intl.dart';
 
 class MyReceipt extends StatelessWidget {
-  const MyReceipt({super.key});
+  final List<Map<String, dynamic>> orderItems;
+  final double total;
+  final String address;
+
+  const MyReceipt({
+    super.key,
+    required this.orderItems,
+    required this.total,
+    required this.address,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Padding(padding: EdgeInsets.only(left: 25, right: 25, top: 50),
-    child: Center(
-      child: Column(
-        children: [
-          Text("Thank you for ordering"),
-          const SizedBox(height: 10,),
-          Container(
-            decoration: BoxDecoration(
-              border: Border.all(color: Theme.of(context).colorScheme.secondary),
-              borderRadius: BorderRadius.circular(8)
-            ),
-            padding: EdgeInsets.all(25),
-            child: Consumer<Restaurant>(builder: (context, restaurant, child)=> Text(restaurant.displayCartReceipt())),
-          ),
-          const SizedBox(height: 10,),
+    final formattedDate =
+    DateFormat("dd-MM-yyyy hh:mm:ss a").format(DateTime.now());
 
-          Text("Estimated Delivery Time: 00:00"),
-        ]
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 40),
+      child: Center(
+        child: Column(
+          children: [
+            const Text(
+              "Thank you for ordering",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 20),
+            Container(
+              decoration: BoxDecoration(
+                border: Border.all(color: Theme.of(context).colorScheme.secondary),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text("Date: $formattedDate"),
+                  const Divider(),
+                  ...orderItems.map((item) => Text(
+                    "${item['quantity']} × ${item['name']} (₹${item['price']})",
+                    style: const TextStyle(fontSize: 14),
+                  )),
+                  const Divider(),
+                  Text("Total: ₹${total.toStringAsFixed(2)}"),
+                  Text("Address: $address"),
+                ],
+              ),
+            ),
+            const SizedBox(height: 15),
+            const Text("Estimated Delivery Time: 00:00"),
+          ],
+        ),
       ),
-    ));
+    );
   }
 }

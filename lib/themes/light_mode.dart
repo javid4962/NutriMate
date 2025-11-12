@@ -8,7 +8,10 @@ ThemeData lightMode = ThemeData(
     tertiary: Colors.white,
     inversePrimary: Colors.grey.shade900,
     outline: Colors.green,
-    primaryContainer: Colors.deepOrange
+    primaryContainer: Colors.deepOrange,
+    secondaryContainer: Color(0xFF56ab2f),
+    tertiaryContainer: Color(0xFFa8e063)
+
   ),
 );
 

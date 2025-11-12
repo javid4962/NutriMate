@@ -63,11 +63,81 @@ class _LoginPageState extends State<LoginPage> {
           }
         }
       } catch (e) {
+        String message = e.toString();
+
+        // 🎯 Friendly message mapping
+        if (message.contains("wrong-password")) {
+          message = "The password you entered is incorrect. Please try again.";
+        } else if (message.contains("user-not-found")) {
+          message = "No account found with this email. Please register first.";
+        } else if (message.contains("invalid-email")) {
+          message = "Please enter a valid email address.";
+        } else if (message.contains("user-disabled")) {
+          message = "This account has been disabled. Contact support for help.";
+        } else if (message.contains("too-many-requests")) {
+          message = "Too many failed attempts. Please try again later.";
+        } else if (message.contains("network-request-failed")) {
+          message = "Network error. Check your internet connection.";
+        } else {
+          message = "Authentication failed. Please check your credentials.";
+        }
+
+        // 🧠 Custom Stylish Error Dialog
         showDialog(
           context: context,
-          builder: (context) => AlertDialog(title: Text(e.toString())),
+          barrierDismissible: true,
+          builder: (context) {
+            return Dialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              insetPadding: const EdgeInsets.all(30),
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.error_outline_rounded,
+                      color: Colors.redAccent.shade200,
+                      size: 60,
+                    ),
+                    const SizedBox(height: 16),
+                    const Text(
+                      "Login Failed",
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      message,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(fontSize: 16, color: Colors.black87),
+                    ),
+                    const SizedBox(height: 20),
+                    ElevatedButton.icon(
+                      onPressed: () => Navigator.pop(context),
+                      icon: const Icon(Icons.check_circle_outline),
+                      label: const Text("OK"),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.redAccent,
+                        foregroundColor: Colors.white,
+                        minimumSize: const Size(120, 45),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
         );
       }
+
     }
   }
 

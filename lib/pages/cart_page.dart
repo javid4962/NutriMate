@@ -23,9 +23,12 @@ class CartPage extends StatelessWidget {
 
         return Scaffold(
           appBar: AppBar(
-            title: const Text('Cart Page'),
-            backgroundColor: Colors.transparent,
-            foregroundColor: Theme.of(context).colorScheme.inversePrimary,
+            elevation: 0,
+            centerTitle: true,
+            title: const Text(
+              "Cart Page",
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
             actions: [
               IconButton(
                 onPressed: () {
@@ -53,7 +56,22 @@ class CartPage extends StatelessWidget {
                 icon: const Icon(Icons.delete),
               ),
             ],
+            flexibleSpace: Container(
+              decoration:  BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Theme.of(context).colorScheme.secondaryContainer,Theme.of(context).colorScheme.secondaryContainer],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+              ),
+            ),
           ),
+          // appBar: AppBar(
+          //   title: const Text('Cart Page'),
+          //   backgroundColor: Colors.transparent,
+          //   foregroundColor: Theme.of(context).colorScheme.inversePrimary,
+          //
+          // ),
           body: Column(
             children: [
               Expanded(

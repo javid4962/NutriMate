@@ -79,8 +79,10 @@ class PaymentModel {
 }
 
 /// ---------------- ORDER MODEL ----------------
+/// Added userId to associate order with a specific user
 class OrderModel {
   final String orderId;
+  final String userId; // ✅ NEW FIELD
   final List<CartItem> items;
   final double totalAmount;
   final String paymentId;
@@ -92,6 +94,7 @@ class OrderModel {
 
   OrderModel({
     required this.orderId,
+    required this.userId, // ✅ REQUIRED
     required this.items,
     required this.totalAmount,
     required this.paymentId,
@@ -105,6 +108,7 @@ class OrderModel {
   Map<String, dynamic> toMap() {
     return {
       'orderId': orderId,
+      'userId': userId, // ✅ Added
       'items': items.map((item) => item.toMap()).toList(),
       'totalAmount': totalAmount,
       'paymentId': paymentId,
@@ -119,6 +123,7 @@ class OrderModel {
   factory OrderModel.fromMap(Map<String, dynamic> map) {
     return OrderModel(
       orderId: map['orderId'] ?? '',
+      userId: map['userId'] ?? '', // ✅ Added
       items: map['items'] != null
           ? List<CartItem>.from(
           (map['items'] as List).map((item) => CartItem.fromMap(item)))
@@ -130,6 +135,59 @@ class OrderModel {
       address: map['address'] ?? '',
       notes: map['notes'] ?? '',
       orderDate: map['orderDate'] ?? Timestamp.now(),
+    );
+  }
+}
+
+/// ---------------- PROFILE FEATURES MODEL ----------------
+class ProfileFeatures {
+  final int age;
+  final String gender;
+  final int heightCm;
+  final int weightKg;
+  final double bmi;
+  final String activityLevel;
+  final String dietaryPreference;
+  final String goal;
+  final Timestamp lastUpdated;
+
+  ProfileFeatures({
+    required this.age,
+    required this.gender,
+    required this.heightCm,
+    required this.weightKg,
+    required this.bmi,
+    required this.activityLevel,
+    required this.dietaryPreference,
+    required this.goal,
+    required this.lastUpdated,
+  });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'age': age,
+      'gender': gender,
+      'heightCm': heightCm,
+      'weightKg': weightKg,
+      'bmi': bmi,
+      'activityLevel': activityLevel,
+      'dietaryPreference': dietaryPreference,
+      'goal': goal,
+      'lastUpdated': lastUpdated,
+    };
+  }
+
+  factory ProfileFeatures.fromMap(Map<String, dynamic> map) {
+    return ProfileFeatures(
+      age: map['age'] ?? 0,
+      gender: map['gender'] ?? '',
+      heightCm: map['heightCm'] ?? 0,
+      weightKg: map['weightKg'] ?? 0,
+      bmi: (map['bmi'] ?? 0).toDouble(),
+      activityLevel: map['activityLevel'] ?? '',
+      dietaryPreference: map['dietaryPreference'] ?? '',
+      goal: map['goal'] ?? '',
+      lastUpdated: map['lastUpdated'] ?? Timestamp.now(),
     );
   }
 }
@@ -147,6 +205,7 @@ class UserModel {
   final List<OrderModel> orders;
   final List<PaymentModel> paymentMethods;
   final Map<String, dynamic> preferences;
+  final ProfileFeatures? profileFeatures;
   final Timestamp createdAt;
   final Timestamp lastLogin;
   final Timestamp updatedAt;
@@ -166,6 +225,7 @@ class UserModel {
     required this.createdAt,
     required this.lastLogin,
     required this.updatedAt,
+    this.profileFeatures,
   });
 
   Map<String, dynamic> toMap() {
@@ -181,6 +241,7 @@ class UserModel {
       'orders': orders.map((order) => order.toMap()).toList(),
       'paymentMethods': paymentMethods.map((p) => p.toMap()).toList(),
       'preferences': preferences,
+      'profileFeatures': profileFeatures?.toMap(),
       'createdAt': createdAt,
       'lastLogin': lastLogin,
       'updatedAt': updatedAt,
@@ -205,10 +266,15 @@ class UserModel {
           (map['orders'] as List).map((o) => OrderModel.fromMap(o)))
           : [],
       paymentMethods: map['paymentMethods'] != null
-          ? List<PaymentModel>.from((map['paymentMethods'] as List)
-          .map((p) => PaymentModel.fromMap(p)))
+          ? List<PaymentModel>.from(
+          (map['paymentMethods'] as List)
+              .map((p) => PaymentModel.fromMap(p)))
           : [],
       preferences: Map<String, dynamic>.from(map['preferences'] ?? {}),
+      profileFeatures: map['profileFeatures'] != null
+          ? ProfileFeatures.fromMap(
+          Map<String, dynamic>.from(map['profileFeatures']))
+          : null,
       createdAt: map['createdAt'] ?? Timestamp.now(),
       lastLogin: map['lastLogin'] ?? Timestamp.now(),
       updatedAt: map['updatedAt'] ?? Timestamp.now(),

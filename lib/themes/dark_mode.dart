@@ -9,5 +9,7 @@ ThemeData darkMode = ThemeData(
     inversePrimary: Colors.grey.shade300,
     outline: Colors.green,
     primaryContainer: Colors.deepOrange,
+    secondaryContainer: Color(0xff46c615),
+    tertiaryContainer: Color(0xff1a210f),
   ),
 );
