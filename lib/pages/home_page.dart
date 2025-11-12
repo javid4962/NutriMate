@@ -15,6 +15,9 @@ import '../models/restaurant.dart';
 import '../models/disease_models_and_mock_data.dart';
 import '../models/disease_food_mapper.dart';
 
+// 🧠 Import ML Recommendation Demo
+import 'ml_recommendation_demo_page.dart';
+
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -22,7 +25,8 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin {
+class _HomePageState extends State<HomePage>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
   // Added: selected disease
@@ -31,7 +35,10 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: FoodCategory.values.length, vsync: this);
+    _tabController = TabController(
+      length: FoodCategory.values.length,
+      vsync: this,
+    );
   }
 
   @override
@@ -82,10 +89,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
         ),
         value: selectedDisease,
         items: diseaseList.map((disease) {
-          return DropdownMenuItem(
-            value: disease,
-            child: Text(disease.name),
-          );
+          return DropdownMenuItem(value: disease, child: Text(disease.name));
         }).toList(),
         onChanged: (newDisease) {
           setState(() {
@@ -106,7 +110,8 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
 
           // ✅ Step 1: choose which menu to show
           final List<Food> currentMenu = selectedDisease != null
-              ? selectedDisease!.asFoodList // from mapper
+              ? selectedDisease!
+                    .asFoodList // from mapper
               : restaurant.menu; // default restaurant menu
 
           return NestedScrollView(
@@ -133,6 +138,32 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                     const SizedBox(height: 10),
 
                     const MyDescriptionBox(),
+
+                    // 🧠 Add ML Recommendations Demo Button
+                    const SizedBox(height: 10),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  const MLRecommendationDemoPage(),
+                            ),
+                          );
+                        },
+                        icon: const Icon(Icons.smart_toy),
+                        label: const Text('🧠 Test ML Recommendations'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Theme.of(
+                            context,
+                          ).colorScheme.primary,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),

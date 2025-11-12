@@ -1,6 +1,6 @@
 name: nutri_mate
 description: "A new Flutter project."
-publish_to: 'none'
+publish_to: "none"
 version: 0.1.0
 
 environment:
@@ -9,6 +9,7 @@ environment:
 dependencies:
   cloud_firestore: ^6.1.0
   collection: ^1.19.1
+  csv: ^6.0.0
   firebase_auth: ^6.1.2
   firebase_core: ^4.2.1
   flutter:
@@ -39,3 +40,5 @@ flutter:
     - lib/images/default/
     - lib/images/onboarding/
     - assets/payments/gpay_config.json
+    - assets/data/
+    - assets/data/disease_food_recommendations_v2.csv
