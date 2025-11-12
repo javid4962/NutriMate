@@ -126,7 +126,8 @@ class OrderModel {
       userId: map['userId'] ?? '', // ✅ Added
       items: map['items'] != null
           ? List<CartItem>.from(
-          (map['items'] as List).map((item) => CartItem.fromMap(item)))
+              (map['items'] as List).map((item) => CartItem.fromMap(item)),
+            )
           : [],
       totalAmount: (map['totalAmount'] ?? 0).toDouble(),
       paymentId: map['paymentId'] ?? '',
@@ -140,6 +141,7 @@ class OrderModel {
 }
 
 /// ---------------- PROFILE FEATURES MODEL ----------------
+
 class ProfileFeatures {
   final int age;
   final String gender;
@@ -151,6 +153,14 @@ class ProfileFeatures {
   final String goal;
   final Timestamp lastUpdated;
 
+  // 🩺 New fields for advanced recommendations
+  final List<String> healthConditions; // e.g. ["Diabetes", "Hypertension"]
+  final List<String> allergies; // e.g. ["Lactose", "Gluten"]
+  final String cuisinePreference; // e.g. "South Indian"
+  final List<String> tastePreference; // e.g. ["Less Oil", "Spicy"]
+  final Map<String, String>
+  mealTimings; // e.g. {"breakfast": "08:00 AM", "lunch": "01:00 PM"}
+
   ProfileFeatures({
     required this.age,
     required this.gender,
@@ -161,8 +171,14 @@ class ProfileFeatures {
     required this.dietaryPreference,
     required this.goal,
     required this.lastUpdated,
+    this.healthConditions = const [],
+    this.allergies = const [],
+    this.cuisinePreference = "",
+    this.tastePreference = const [],
+    this.mealTimings = const {},
   });
 
+  /// Convert to Firestore map
   Map<String, dynamic> toMap() {
     return {
       'age': age,
@@ -174,9 +190,17 @@ class ProfileFeatures {
       'dietaryPreference': dietaryPreference,
       'goal': goal,
       'lastUpdated': lastUpdated,
+
+      // 🩺 New fields
+      'healthConditions': healthConditions,
+      'allergies': allergies,
+      'cuisinePreference': cuisinePreference,
+      'tastePreference': tastePreference,
+      'mealTimings': mealTimings,
     };
   }
 
+  /// Construct from Firestore map
   factory ProfileFeatures.fromMap(Map<String, dynamic> map) {
     return ProfileFeatures(
       age: map['age'] ?? 0,
@@ -188,6 +212,13 @@ class ProfileFeatures {
       dietaryPreference: map['dietaryPreference'] ?? '',
       goal: map['goal'] ?? '',
       lastUpdated: map['lastUpdated'] ?? Timestamp.now(),
+
+      // 🩺 New fields (safe null handling)
+      healthConditions: List<String>.from(map['healthConditions'] ?? []),
+      allergies: List<String>.from(map['allergies'] ?? []),
+      cuisinePreference: map['cuisinePreference'] ?? '',
+      tastePreference: List<String>.from(map['tastePreference'] ?? []),
+      mealTimings: Map<String, String>.from(map['mealTimings'] ?? {}),
     );
   }
 }
@@ -259,21 +290,26 @@ class UserModel {
       isEmailVerified: map['isEmailVerified'] ?? false,
       cart: map['cart'] != null
           ? List<CartItem>.from(
-          (map['cart'] as List).map((item) => CartItem.fromMap(item)))
+              (map['cart'] as List).map((item) => CartItem.fromMap(item)),
+            )
           : [],
       orders: map['orders'] != null
           ? List<OrderModel>.from(
-          (map['orders'] as List).map((o) => OrderModel.fromMap(o)))
+              (map['orders'] as List).map((o) => OrderModel.fromMap(o)),
+            )
           : [],
       paymentMethods: map['paymentMethods'] != null
           ? List<PaymentModel>.from(
-          (map['paymentMethods'] as List)
-              .map((p) => PaymentModel.fromMap(p)))
+              (map['paymentMethods'] as List).map(
+                (p) => PaymentModel.fromMap(p),
+              ),
+            )
           : [],
       preferences: Map<String, dynamic>.from(map['preferences'] ?? {}),
       profileFeatures: map['profileFeatures'] != null
           ? ProfileFeatures.fromMap(
-          Map<String, dynamic>.from(map['profileFeatures']))
+              Map<String, dynamic>.from(map['profileFeatures']),
+            )
           : null,
       createdAt: map['createdAt'] ?? Timestamp.now(),
       lastLogin: map['lastLogin'] ?? Timestamp.now(),

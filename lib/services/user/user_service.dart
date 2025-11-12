@@ -28,7 +28,7 @@ class UserService {
     required int weightKg,
     required String activityLevel,
     required String dietaryPreference,
-    String? goal,
+    String? goal, required Map<String, Object> extraData,
   }) async {
     double heightM = heightCm / 100;
     double bmi = heightM > 0 ? double.parse((weightKg / (heightM * heightM)).toStringAsFixed(1)) : 0;

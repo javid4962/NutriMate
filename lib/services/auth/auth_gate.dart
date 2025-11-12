@@ -4,16 +4,17 @@ import 'package:flutter/material.dart';
 import 'package:nutri_mate/pages/home_page.dart';
 import 'package:nutri_mate/pages/profile_features.dart';
 import 'package:nutri_mate/pages/verify_email_page.dart';
+import 'package:nutri_mate/pages/onboarding_page.dart';
 import 'package:nutri_mate/services/auth/login_or_register.dart';
 
 class AuthGate extends StatelessWidget {
   const AuthGate({super.key});
 
   Future<Widget> _getInitialScreen(User user) async {
-    // 1️⃣ If email not verified → go to VerifyEmailPage
+    // 1️⃣ Email verification check
     if (!user.emailVerified) return const VerifyEmailPage();
 
-    // 2️⃣ Check Firestore for profileFeatures
+    // 2️⃣ Fetch user data from Firestore
     final userDoc = await FirebaseFirestore.instance
         .collection('users')
         .doc(user.uid)
@@ -21,12 +22,17 @@ class AuthGate extends StatelessWidget {
 
     final data = userDoc.data();
 
-    // 3️⃣ If user doc missing or no profileFeatures → go to Profile setup
+    // 3️⃣ No profile features → go to setup
     if (data == null || data['profileFeatures'] == null) {
       return const ProfileFeaturesPage();
     }
 
-    // 4️⃣ Otherwise → go to HomePage
+    // 4️⃣ Profile done, but onboarding not completed
+    if (data['hasCompletedOnboarding'] == false) {
+      return const OnboardingPage();
+    }
+
+    // 5️⃣ Everything done → go home
     return const HomePage();
   }
 
@@ -36,7 +42,6 @@ class AuthGate extends StatelessWidget {
       body: StreamBuilder<User?>(
         stream: FirebaseAuth.instance.authStateChanges(),
         builder: (context, snapshot) {
-          // ⏳ Waiting for Firebase
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
@@ -45,8 +50,6 @@ class AuthGate extends StatelessWidget {
 
           if (snapshot.hasData) {
             final user = snapshot.data!;
-
-            // 🚀 Use FutureBuilder to wait for Firestore check
             child = FutureBuilder<Widget>(
               future: _getInitialScreen(user),
               builder: (context, futureSnapshot) {
@@ -65,11 +68,9 @@ class AuthGate extends StatelessWidget {
               },
             );
           } else {
-            // 🧍‍♂️ Not logged in → go to login/register
             child = const LoginOrRegister();
           }
 
-          // ✨ Smooth fade transition
           return AnimatedSwitcher(
             duration: const Duration(milliseconds: 400),
             switchInCurve: Curves.easeInOut,
