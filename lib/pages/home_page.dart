@@ -95,13 +95,17 @@ class _HomePageState extends State<HomePage>
     }
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20.0),
+      padding: EdgeInsets.symmetric(horizontal: 20.0),
       child: DropdownButtonFormField<String>(
         value: _selectedDiseaseName,
-        decoration: const InputDecoration(
+        decoration: InputDecoration(
           labelText: 'Health Condition',
+          labelStyle: TextStyle(color: Theme.of(context).colorScheme.secondary),
           border: OutlineInputBorder(),
-          prefixIcon: Icon(Icons.health_and_safety),
+          prefixIcon: Icon(
+            Icons.health_and_safety,
+            color: Theme.of(context).colorScheme.secondary,
+          ),
         ),
         items: _diseases.map((disease) {
           return DropdownMenuItem(value: disease, child: Text(disease));

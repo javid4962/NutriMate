@@ -1,3 +1,7 @@
+# ---- Python version ----
+python-3.11.6
+
+
 # ---- Core API Framework ----
 fastapi==0.115.0
 uvicorn==0.30.1
