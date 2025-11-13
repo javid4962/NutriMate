@@ -23,7 +23,8 @@ app.add_middleware(
 # -----------------------------------------------------------
 # ✅ Load dataset
 # -----------------------------------------------------------
-DATASET_PATH = "data/disease_food_recommendations_v2.csv"
+DATASET_PATH = "backend/data/disease_food_recommendations_v2.csv"
+
 
 if not os.path.exists(DATASET_PATH):
     raise FileNotFoundError(f"Dataset not found: {DATASET_PATH}")
