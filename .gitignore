@@ -51,3 +51,16 @@ ml/
 venv/
 .env/
 __pycache__/
+# Flutter build
+build/
+android/app/build/
+ios/Build/
+*.apk
+*.aab
+
+# Python venv
+ml/
+venv/
+.env
+__pycache__/
+*.pyc
