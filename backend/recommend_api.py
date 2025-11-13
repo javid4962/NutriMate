@@ -2,63 +2,98 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import pandas as pd
 import os
-
-# from openai import OpenAI   # ⛔ Commented out since we're skipping image generation
-
-# client = OpenAI(api_key="YOUR_API_KEY")  # ⛔ Commented out
+import threading
 
 app = FastAPI(title="NutriMate ML Recommendation API")
 
 # -----------------------------------------------------------
-# ✅ CORS setup
+# CORS
 # -----------------------------------------------------------
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # use specific origins later for production
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 # -----------------------------------------------------------
-# ✅ Load dataset
+# Dataset Loading (Safe for Render)
 # -----------------------------------------------------------
-DATASET_PATH = "backend/data/disease_food_recommendations_v2.csv"
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DATASET_PATH = os.path.join(BASE_DIR, "data", "disease_food_recommendations_v2.csv")
+
+df = None
+_ready = False
+_lock = threading.Lock()
+
+def load_dataset():
+    """Lazy-load the dataset without blocking app startup."""
+    global df, _ready
+    with _lock:
+        if _ready:  # already loaded
+            return
+
+        try:
+            if not os.path.exists(DATASET_PATH):
+                raise FileNotFoundError(f"Dataset not found at: {DATASET_PATH}")
+
+            print(f"📥 Loading dataset from: {DATASET_PATH}")
+            df_local = pd.read_csv(DATASET_PATH)
+
+            # Normalize & rename
+            df_local.columns = df_local.columns.str.strip().str.lower()
+            df_local.rename(
+                columns={
+                    "disease": "disease",
+                    "mealtype": "meal_type",
+                    "foodname": "food_name",
+                    "diettype": "diet_type",
+                    "cuisine": "cuisine",
+                    "calories": "calories",
+                    "protein (g)": "protein",
+                    "carbs (g)": "carbs",
+                    "fats (g)": "fats",
+                    "ingredients": "ingredients",
+                    "preparationsteps": "preparation_steps",
+                    "healthnotes": "health_notes",
+                },
+                inplace=True,
+            )
+
+            df = df_local
+            _ready = True
+            print(f"✅ Dataset loaded: {len(df)} rows")
+        except Exception as e:
+            print(f"❌ Failed to load dataset: {e}")
+            df = pd.DataFrame()
+            _ready = False
 
 
-if not os.path.exists(DATASET_PATH):
-    raise FileNotFoundError(f"Dataset not found: {DATASET_PATH}")
+@app.on_event("startup")
+def on_startup():
+    # Load the dataset in a background thread
+    threading.Thread(target=load_dataset, daemon=True).start()
 
-df = pd.read_csv(DATASET_PATH)
-print(f"✅ Loaded dataset: {len(df)} rows, columns: {list(df.columns)}")
-
-# Normalize columns for consistency
-df.columns = df.columns.str.strip()
-df.columns = df.columns.str.lower()
-
-# Rename columns if necessary
-df.rename(
-    columns={
-        "disease": "disease",
-        "mealtype": "meal_type",
-        "foodname": "food_name",
-        "diettype": "diet_type",
-        "cuisine": "cuisine",
-        "calories": "calories",
-        "protein (g)": "protein",
-        "carbs (g)": "carbs",
-        "fats (g)": "fats",
-        "ingredients": "ingredients",
-        "preparationsteps": "preparation_steps",
-        "healthnotes": "health_notes",
-    },
-    inplace=True,
-)
-
-print(f"✅ Normalized columns: {list(df.columns)}")
 
 # -----------------------------------------------------------
-# ✅ Endpoints
+# Health Check Endpoints
+# -----------------------------------------------------------
+
+@app.get("/health")
+def health():
+    """Basic health endpoint to confirm API is alive."""
+    return {"status": "ok"}
+
+@app.get("/ready")
+def ready():
+    """Check if dataset is fully loaded."""
+    return {"dataset_ready": _ready}
+
+
+# -----------------------------------------------------------
+# API Endpoints
 # -----------------------------------------------------------
 
 @app.get("/")
@@ -68,69 +103,63 @@ def root():
 
 @app.get("/available_diseases")
 def get_available_diseases():
-    diseases = sorted(df["disease"].dropna().unique().tolist())
-    return diseases
+    load_dataset()
+    return sorted(df["disease"].dropna().unique().tolist())
 
 
 @app.get("/available_diet_types")
 def get_available_diet_types():
-    diet_types = sorted(df["diet_type"].dropna().unique().tolist())
-    return diet_types
+    load_dataset()
+    return sorted(df["diet_type"].dropna().unique().tolist())
 
 
 @app.get("/available_cuisines/{disease}")
 def get_available_cuisines(disease: str):
+    load_dataset()
     subset = df[df["disease"].str.lower() == disease.lower()]
-    cuisines = sorted(subset["cuisine"].dropna().unique().tolist())
-    return cuisines
+    return sorted(subset["cuisine"].dropna().unique().tolist())
 
 
 @app.post("/recommend")
 def recommend(payload: dict):
-    """
-    Returns food recommendations based on filters.
-    If no 'disease' is provided, returns all food items (default: 50).
-    """
+    load_dataset()
+
     disease = payload.get("disease", "").strip().lower()
     meal_type = payload.get("meal_type", "").strip().lower()
     diet_type = payload.get("diet_type", "").strip().lower()
     cuisine = payload.get("cuisine", "").strip().lower()
     max_results = int(payload.get("max_results", 50))
 
-    # Copy original dataset
     filtered = df.copy()
 
-    # Apply filters only if provided
     if disease:
         filtered = filtered[filtered["disease"].str.lower() == disease]
     if meal_type:
-        filtered = filtered[filtered["meal_type"].str.lower().str.contains(meal_type, na=False)]
+        filtered = filtered[
+            filtered["meal_type"].str.lower().str.contains(meal_type, na=False)
+        ]
     if diet_type:
-        filtered = filtered[filtered["diet_type"].str.lower().str.contains(diet_type, na=False)]
+        filtered = filtered[
+            filtered["diet_type"].str.lower().str.contains(diet_type, na=False)
+        ]
     if cuisine:
-        filtered = filtered[filtered["cuisine"].str.lower().str.contains(cuisine, na=False)]
+        filtered = filtered[
+            filtered["cuisine"].str.lower().str.contains(cuisine, na=False)
+        ]
 
-    # If no filters match or all empty → fallback to all food items
     if filtered.empty or not disease:
         filtered = df.head(max_results)
 
     results = filtered.head(max_results)
+
     response = []
-
     for _, row in results.iterrows():
-        food_name = row.get("food_name", "")
-        cuisine_type = row.get("cuisine", "")
-        diet_type = row.get("diet_type", "")
-
-        # ✅ Placeholder image (no OpenAI call)
-        image_url = "https://placehold.co/512x512?text=Food+Image"
-
         response.append({
-            "disease": row.get("disease", ""),
+            "disease": row["disease"],
             "meal_type": row.get("meal_type", ""),
-            "food_name": food_name,
-            "diet_type": diet_type,
-            "cuisine": cuisine_type,
+            "food_name": row.get("food_name", ""),
+            "diet_type": row.get("diet_type", ""),
+            "cuisine": row.get("cuisine", ""),
             "calories": row.get("calories", 0),
             "protein": row.get("protein", 0),
             "carbs": row.get("carbs", 0),
@@ -138,7 +167,7 @@ def recommend(payload: dict):
             "ingredients": row.get("ingredients", ""),
             "preparation_steps": row.get("preparation_steps", ""),
             "health_notes": row.get("health_notes", ""),
-            "image_url": image_url,
+            "image_url": "https://placehold.co/512x512?text=Food+Image",
         })
 
     return response

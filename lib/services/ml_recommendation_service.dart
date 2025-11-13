@@ -4,8 +4,7 @@ import '../models/food.dart';
 
 class MLRecommendationService {
   // 🔹 Your live ngrok or API URL
-  static const String _baseUrl =
-      "https://uninclined-michelina-unshowily.ngrok-free.dev";
+  static const String _baseUrl = "https://nutrimate-main2.onrender.com";
 
   /// Fetch all diseases available from the backend
   Future<List<String>> getAvailableDiseases() async {
